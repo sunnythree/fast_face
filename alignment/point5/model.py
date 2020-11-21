@@ -10,11 +10,11 @@ class Mish(nn.Module):
         return x
 
 class CnnBlock(nn.Module):
-    def __init__(self, inplanes, planes, kernel_size=3, stride=1, padding=1):
+    def __init__(self, inplanes, planes, kernel_size=3, stride=1, padding=1, active=nn.ReLU()):
         super(CnnBlock, self).__init__()
         self.conv = nn.Conv2d(inplanes, planes, kernel_size=kernel_size, stride=stride, bias=False, padding=padding)
         self.bn = nn.BatchNorm2d(planes)
-        self.active = nn.ReLU()
+        self.active = active
 
     def forward(self, x):
         out = self.conv(x)
@@ -32,7 +32,7 @@ class CnnAlign(nn.Module):
         self.cnn3 = CnnBlock(32, 64)
         self.cnn4 = CnnBlock(64, 128)
         self.cnn5 = CnnBlock(128, 128, kernel_size=1, padding=0)
-        self.cnn6 = CnnBlock(256, 10, kernel_size=1, padding=0)
+        self.cnn6 = CnnBlock(128, 10, kernel_size=1, padding=0, active=nn.Tanh())
         self.max_pool = nn.MaxPool2d(2)
         self.mean_pool = nn.AdaptiveAvgPool2d((1, 1))
 

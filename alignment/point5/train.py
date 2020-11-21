@@ -5,14 +5,14 @@ import argparse
 import torch
 import os
 from torchvision import transforms as tfs
-from point196.model import CnnAlign
-from point196.dataset import HellenDataset, DataPrefetcher, draw_ann
+from point5.model import CnnAlign
+from point5.dataset import MTFLDataset, draw_ann, de_normal_anns
 import PIL.ImageFont as ImageFont
 import numpy as np
 from point196.summary import writer
 from tqdm import tqdm
 
-MODEL_SAVE_PATH = "./output/face_align_hard.pt"
+MODEL_SAVE_PATH = "./output/alignment205.pt"
 
 font_size = 4
 font1 = ImageFont.truetype(r'./Ubuntu-B.ttf', font_size)
@@ -21,21 +21,21 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gama', "-g", type=float, default=0.9, help='train gama')
     parser.add_argument('--step', "-s", type=int, default=20, help='train step')
-    parser.add_argument('--batch', "-b", type=int, default=1, help='train batch')
-    parser.add_argument('--epoes', "-e", type=int, default=30, help='train epoes')
+    parser.add_argument('--batch', "-b", type=int, default=100, help='train batch')
+    parser.add_argument('--epoes', "-e", type=int, default=500, help='train epoes')
     parser.add_argument('--lr', "-l", type=float, default=0.001, help='learn rate')
-    parser.add_argument('--pretrained', "-p", type=bool, default=False, help='prepare trained')
+    parser.add_argument('--pretrained', "-p", type=bool, default=True, help='prepare trained')
     parser.add_argument('--mini_batch', "-m", type=int, default=1, help='mini batch')
     return parser.parse_args()
 
 def train(args):
     start_epoch = 0
-    data_loader = DataLoader(dataset=HellenDataset(True, 224), batch_size=args.batch, shuffle=True, num_workers=16)
+    data_loader = DataLoader(dataset=MTFLDataset(True, 64), batch_size=args.batch, shuffle=True, num_workers=16)
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")
     model = CnnAlign()
     print("add graph")
-    writer.add_graph(model, torch.zeros((1, 3, 224, 224)))
+    writer.add_graph(model, torch.zeros((1, 3, 64, 64)))
     print("add graph over")
     if args.pretrained and os.path.exists(MODEL_SAVE_PATH):
         print("loading ...")
@@ -76,25 +76,27 @@ def train(args):
             writer.add_scalar("loss", train_loss, global_step=global_step)
             i_batch += 1
 
-
-        #save one pic and output
-        pil_img = to_pil_img(last_img_tensor[0].cpu())
-        ann = output[0].cpu().detach().numpy()
-        ann = np.resize(ann, (194, 2))
-        draw_ann(pil_img, ann.tolist(), font1, font_size)
-        writer.add_image("img: "+str(epoch), to_tensor(pil_img))
         scheduler.step()
 
-        if epoch % 10 == 0:
-            print('Saving..')
-            state = {
-                'net': model.module.state_dict(),
-                'epoch': epoch,
-            }
-            torch.save(state, "./output/face_align_hard"+str(epoch)+".pt")
 
-    if not os.path.isdir('data'):
-        os.mkdir('../data')
+        # save one pic and output
+        pil_img = to_pil_img(last_img_tensor[0].cpu())
+        anns = output[0].cpu().detach().numpy()
+        anns = np.resize(anns, (10, 2))
+        anns = de_normal_anns(anns.tolist(), 64, 64)
+        draw_ann(pil_img, anns, font1, font_size)
+        writer.add_image("img: " + str(epoch), to_tensor(pil_img))
+
+        print('Saving..')
+        state = {
+            'net': model.module.state_dict(),
+            'epoch': epoch,
+        }
+        if not os.path.isdir('output'):
+            os.mkdir('data')
+        torch.save(state, "./output/alignment"+str(epoch)+".pt")
+
+
     print('Saving..')
     state = {
         'net': model.module.state_dict(),

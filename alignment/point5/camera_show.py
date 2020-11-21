@@ -5,12 +5,12 @@ import torch
 import PIL.ImageFont as ImageFont
 from torchvision import transforms as tfs
 
-from point196.dataset import draw_ann
-from point196.model import CnnAlign
+from point5.dataset import draw_ann, de_normal_anns
+from point5.model import CnnAlign
 
-MODEL_FACE_ALIGN  = "./data/face_align_hard.pt"
+MODEL_FACE_ALIGN  = "./output/alignment205.pt"
 
-font_size = 4
+font_size = 8
 font1 = ImageFont.truetype(r'./Ubuntu-B.ttf', font_size)
 
 
@@ -31,6 +31,7 @@ def get_pytorch_model(path):
     model.eval()
     return model
 
+input_size = 64
 
 if __name__ == "__main__":
     face_align_model = get_pytorch_model(MODEL_FACE_ALIGN)
@@ -40,11 +41,12 @@ if __name__ == "__main__":
         # get a frame
         ret, img = cap.read()
         image = cv2image(img)
-        image = image.resize((224, 224))
-        output = face_align_model(to_tensor(image).view(-1, 3, 224, 224))
-        ann = output[0].cpu().detach().numpy()
-        ann = np.resize(ann, (194, 2))
-        draw_ann(image, ann, font1, font_size)
+        image = image.resize((input_size, input_size))
+        output = face_align_model(to_tensor(image).view(-1, 3, input_size, input_size))
+        anns = output[0].cpu().detach().numpy()
+        anns = np.resize(anns, (10, 2))
+        anns = de_normal_anns(anns, input_size, input_size)
+        draw_ann(image, anns, font1, font_size)
         img = image2cv(image)
         cv2.imshow("test", img)
         if cv2.waitKey(1) & 0xFF == ord('q'):

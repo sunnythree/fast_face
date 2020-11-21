@@ -21,7 +21,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gama', "-g", type=float, default=0.9, help='train gama')
     parser.add_argument('--step', "-s", type=int, default=20, help='train step')
-    parser.add_argument('--batch', "-b", type=int, default=1, help='train batch')
+    parser.add_argument('--batch', "-b", type=int, default=20, help='train batch')
     parser.add_argument('--epoes', "-e", type=int, default=30, help='train epoes')
     parser.add_argument('--lr', "-l", type=float, default=0.001, help='learn rate')
     parser.add_argument('--pretrained', "-p", type=bool, default=False, help='prepare trained')

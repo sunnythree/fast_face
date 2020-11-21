@@ -144,7 +144,6 @@ def pic_resize2square(img, des_size, ann, is_random=True):
 
 
 def draw_ann(img, ann, font, font_size):
-    print(ann)
     draw = ImageDraw.Draw(img)
     new_ann = []
     for p in ann:
@@ -155,6 +154,21 @@ def draw_ann(img, ann, font, font_size):
         center_y = ann[i][1] - font_size / 2
         draw.text((center_x, center_y), str(i), fill=(0, 255, 0), font=font, font_size=font_size)
 
+def normal_anns(anns, w, h):
+    hw = w/2
+    hh = h/2
+    for ann in anns:
+        ann[0] = (ann[0] - hw) / hw
+        ann[1] = (ann[1] - hh) / hh
+    return anns
+
+def de_normal_anns(anns, w, h):
+    hw = w/2
+    hh = h/2
+    for ann in anns:
+        ann[0] = ann[0] * hw + hw
+        ann[1] = ann[1] * hh + hh
+    return anns
 
 class MTFLDataset(Dataset):
     def __init__(self, is_train, size):
@@ -168,6 +182,8 @@ class MTFLDataset(Dataset):
         for line in open(self.file_path):
             line = line.strip()
             line_data = line.split(' ')
+            if len(line_data) != 15:
+                continue
             self.datas.append(line_data)
         self.pic_strong = tfs.Compose([
             tfs.ColorJitter(0.5, 0.3, 0.3, 0.1),
@@ -179,11 +195,13 @@ class MTFLDataset(Dataset):
 
     def __getitem__(self, item):
         data = self.datas[item]
-        img = Image.open(os.path.join(cfg.path, data[0]).replace('\\', '/'))
+        img_path = os.path.join(cfg.path, data[0]).replace('\\', '/')
+        img = Image.open(img_path)
         ann = []
         for i in range(1, 6):
             ann.append([float(data[i]), float(data[i+5])])
         square_img, square_ann = pic_resize2square(img, self.size, ann)
+        square_ann = normal_anns(square_ann, square_img.size[0], square_img.size[1])
         return self.pic_strong(square_img), torch.from_numpy(np.array(square_ann)).float()
 
 
@@ -195,7 +213,9 @@ def test_dataset():
     for i_batch, sample_batched in enumerate(data_loader):
         fig = plt.figure(num=1, figsize=(15, 8), dpi=80)  # 开启一个窗口，同时设置大小，分辨率
         square_img = transform(sample_batched[0][0])
-        draw_ann(square_img, sample_batched[1][0].numpy().tolist(), font1, font_size)
+        anns = sample_batched[1][0].numpy().tolist()
+        anns = de_normal_anns(anns, square_img.size[0], square_img.size[1])
+        draw_ann(square_img, anns, font1, font_size)
         plt.imshow(square_img)
         plt.show()
         plt.close()
