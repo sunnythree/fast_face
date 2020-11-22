@@ -12,7 +12,7 @@ import numpy as np
 from point196.summary import writer
 from tqdm import tqdm
 
-MODEL_SAVE_PATH = "./output/alignment205.pt"
+MODEL_SAVE_PATH = "./output/alignment700.pt"
 
 font_size = 4
 font1 = ImageFont.truetype(r'./Ubuntu-B.ttf', font_size)
@@ -20,10 +20,10 @@ font1 = ImageFont.truetype(r'./Ubuntu-B.ttf', font_size)
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gama', "-g", type=float, default=0.9, help='train gama')
-    parser.add_argument('--step', "-s", type=int, default=20, help='train step')
+    parser.add_argument('--step', "-s", type=int, default=200, help='train step')
     parser.add_argument('--batch', "-b", type=int, default=100, help='train batch')
     parser.add_argument('--epoes', "-e", type=int, default=500, help='train epoes')
-    parser.add_argument('--lr', "-l", type=float, default=0.001, help='learn rate')
+    parser.add_argument('--lr', "-l", type=float, default=0.00001, help='learn rate')
     parser.add_argument('--pretrained', "-p", type=bool, default=True, help='prepare trained')
     parser.add_argument('--mini_batch', "-m", type=int, default=1, help='mini batch')
     return parser.parse_args()

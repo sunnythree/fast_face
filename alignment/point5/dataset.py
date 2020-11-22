@@ -190,6 +190,7 @@ class MTFLDataset(Dataset):
             tfs.ToTensor()
         ])
 
+
     def __len__(self):
         return len(self.datas)
 
@@ -200,6 +201,22 @@ class MTFLDataset(Dataset):
         ann = []
         for i in range(1, 6):
             ann.append([float(data[i]), float(data[i+5])])
+        # random crop
+        if random.random() < cfg.crop_prop:
+            img, ann = crop_face_area(img, ann, rand_ratio=1)
+
+        # # flip up-down
+        # if random.random() < cfg.flip_up:
+        #     img = img.transpose(Image.FLIP_TOP_BOTTOM)
+        #     for ann_one in ann:
+        #         ann_one[1] = img.size[1] - ann_one[1]
+        #
+        # flip left-right
+        # if random.random() < cfg.flip_lr:
+        #     img = img.transpose(Image.FLIP_LEFT_RIGHT)
+        #     for ann_one in ann:
+        #         ann_one[0] = img.size[0] - ann_one[0]
+
         square_img, square_ann = pic_resize2square(img, self.size, ann)
         square_ann = normal_anns(square_ann, square_img.size[0], square_img.size[1])
         return self.pic_strong(square_img), torch.from_numpy(np.array(square_ann)).float()

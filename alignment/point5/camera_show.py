@@ -8,7 +8,7 @@ from torchvision import transforms as tfs
 from point5.dataset import draw_ann, de_normal_anns
 from point5.model import CnnAlign
 
-MODEL_FACE_ALIGN  = "./output/alignment205.pt"
+MODEL_FACE_ALIGN  = "./output/alignment800.pt"
 
 font_size = 8
 font1 = ImageFont.truetype(r'./Ubuntu-B.ttf', font_size)
@@ -47,6 +47,7 @@ if __name__ == "__main__":
         anns = np.resize(anns, (10, 2))
         anns = de_normal_anns(anns, input_size, input_size)
         draw_ann(image, anns, font1, font_size)
+        image = image.resize((480, 480))
         img = image2cv(image)
         cv2.imshow("test", img)
         if cv2.waitKey(1) & 0xFF == ord('q'):

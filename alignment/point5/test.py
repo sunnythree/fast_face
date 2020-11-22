@@ -10,7 +10,7 @@ import numpy as np
 import time
 
 
-MODEL_FACE_ALIGN = "./output/alignment205.pt"
+MODEL_FACE_ALIGN = "./output/alignment520.pt"
 
 font_size = 4
 font1 = ImageFont.truetype(r'./Ubuntu-B.ttf', font_size)
